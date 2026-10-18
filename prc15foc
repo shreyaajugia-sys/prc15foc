@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineMatch | Movie Recommender</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0b0b14;
+    color: white;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 7%;
+    background: #12121f;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.logo {
+    color: #b48cff;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+header a {
+    color: white;
+    text-decoration: none;
+}
+
+.hero {
+    padding: 65px 7%;
+    text-align: center;
+    background: linear-gradient(135deg, #271447, #101020, #3a153d);
+}
+
+.hero h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    margin-bottom: 15px;
+}
+
+.hero p {
+    color: #d0c9df;
+    margin-bottom: 25px;
+}
+
+.search {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+input, select, button {
+    padding: 13px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+input, select {
+    background: #242438;
+    color: white;
+    border: 1px solid #45455d;
+}
+
+button {
+    background: #a56aff;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #8849e8;
+}
+
+main {
+    padding: 35px 7%;
+}
+
+.section-title {
+    margin-bottom: 20px;
+    font-size: 25px;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.filters button {
+    background: #242438;
+}
+
+.filters button.active {
+    background: #a56aff;
+}
+
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 22px;
+}
+
+.movie-card {
+    background: #171725;
+    border: 1px solid #29293d;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform .2s;
+}
+
+.movie-card:hover {
+    transform: translateY(-6px);
+}
+
+.poster {
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 65px;
+    background: linear-gradient(145deg, #4b2778, #171725);
+}
+
+.movie-info {
+    padding: 14px;
+}
+
+.movie-info h3 {
+    font-size: 17px;
+    margin-bottom: 8px;
+}
+
+.movie-info p {
+    color: #bdb7cb;
+    font-size: 13px;
+    margin-bottom: 9px;
+}
+
+.rating {
+    color: #ffd166 !important;
+}
+
+.movie-info button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 5px;
+    font-size: 13px;
+}
+
+.empty {
+    color: #c7bdd8;
+    padding: 25px 0;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #aaa3b9;
+}
+
+@media (max-width: 500px) {
+    header { padding: 18px 5%; }
+    main { padding: 28px 5%; }
+    .hero { padding: 45px 5%; }
+    .poster { height: 190px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">🎬 CineMatch</div>
+    <a href="#movies">Explore Movies</a>
+</header>
+
+<section class="hero">
+    <h1>Find Your Next Favourite 🍿</h1>
+    <p>Discover movies picked just for your mood.</p>
+
+    <div class="search">
+        <input
+            type="text"
+            id="search"
+            placeholder="Search a movie..."
+        >
+
+        <select id="genre">
+            <option value="All">All Genres</option>
+            <option value="Action">Action</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Romance">Romance</option>
+            <option value="Sci-Fi">Sci-Fi</option>
+            <option value="Thriller">Thriller</option>
+            <option value="Animation">Animation</option>
+        </select>
+
+        <button onclick="recommend()">Find Movies</button>
+    </div>
+</section>
+
+<main id="movies">
+    <h2 class="section-title" id="heading">
+        ✨ Recommended For You
+    </h2>
+
+    <div class="filters">
+        <button class="active" onclick="chooseGenre('All', this)">All</button>
+        <button onclick="chooseGenre('Action', this)">Action</button>
+        <button onclick="chooseGenre('Comedy', this)">Comedy</button>
+        <button onclick="chooseGenre('Romance', this)">Romance</button>
+        <button onclick="chooseGenre('Sci-Fi', this)">Sci-Fi</button>
+        <button onclick="chooseGenre('Thriller', this)">Thriller</button>
+        <button onclick="chooseGenre('Animation', this)">Animation</button>
+    </div>
+
+    <div class="movie-grid" id="movieGrid"></div>
+    <p class="empty" id="empty" hidden>No movies found. Try another search!</p>
+</main>
+
+<footer>
+    Made with 💜 by CineMatch | Your personal movie guide
+</footer>
+
+<script>
+const movies = [
+    { title: "Inception", genre: "Sci-Fi", rating: 8.8, year: 2010, emoji: "🌀" },
+    { title: "Interstellar", genre: "Sci-Fi", rating: 8.7, year: 2014, emoji: "🚀" },
+    { title: "The Dark Knight", genre: "Action", rating: 9.0, year: 2008, emoji: "🦇" },
+    { title: "Avengers: Endgame", genre: "Action", rating: 8.4, year: 2019, emoji: "🦸" },
+    { title: "The Hangover", genre: "Comedy", rating: 7.7, year: 2009, emoji: "😂" },
+    { title: "Home Alone", genre: "Comedy", rating: 7.7, year: 1990, emoji: "🏠" },
+    { title: "La La Land", genre: "Romance", rating: 8.0, year: 2016, emoji: "💃" },
+    { title: "The Notebook", genre: "Romance", rating: 7.8, year: 2004, emoji: "❤️" },
+    { title: "Shutter Island", genre: "Thriller", rating: 8.2, year: 2010, emoji: "🧩" },
+    { title: "Gone Girl", genre: "Thriller", rating: 8.1, year: 2014, emoji: "🔍" },
+    { title: "Coco", genre: "Animation", rating: 8.4, year: 2017, emoji: "🎸" },
+    { title: "Toy Story", genre: "Animation", rating: 8.3, year: 1995, emoji: "🤠" }
+];
+
+let selectedGenre = "All";
+
+function displayMovies(list) {
+    const grid = document.getElementById("movieGrid");
+    const empty = document.getElementById("empty");
+
+    grid.innerHTML = "";
+
+    empty.hidden = list.length > 0;
+
+    list.forEach(movie => {
+        const card = document.createElement("div");
+        card.className = "movie-card";
+
+        card.innerHTML = `
+            <div class="poster">${movie.emoji}</div>
+            <div class="movie-info">
+                <h3></h3>
+                <p>${movie.genre} • ${movie.year}</p>
+                <p class="rating">⭐ ${movie.rating}/10</p>
+                <button>Recommend Similar</button>
+            </div>
+        `;
+
+        card.querySelector("h3").textContent = movie.title;
+
+        card.querySelector("button").addEventListener("click", () => {
+            selectedGenre = movie.genre;
+            document.getElementById("genre").value = movie.genre;
+            document.getElementById("search").value = "";
+            document.getElementById("heading").textContent =
+                "🎯 More " + movie.genre + " Movies";
+            recommend();
+        });
+
+        grid.appendChild(card);
+    });
+}
+
+function recommend() {
+    const searchText =
+        document.getElementById("search").value.toLowerCase().trim();
+
+    const genre = document.getElementById("genre").value;
+
+    selectedGenre = genre;
+
+    const results = movies.filter(movie => {
+        const matchesName = movie.title.toLowerCase().includes(searchText);
+        const matchesGenre = genre === "All" || movie.genre === genre;
+
+        return matchesName && matchesGenre;
+    });
+
+    document.getElementById("heading").textContent =
+        genre === "All" ? "✨ Recommended For You" :
+        "🎯 " + genre + " Movie Recommendations";
+
+    displayMovies(results);
+}
+
+function chooseGenre(genre, button) {
+    document.getElementById("genre").value = genre;
+
+    document.querySelectorAll(".filters button").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    recommend();
+}
+
+document.getElementById("search").addEventListener("input", recommend);
+document.getElementById("genre").addEventListener("change", recommend);
+
+displayMovies(movies);
+</script>
+
+</body>
+</html>
